@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sign In — TradeDesk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/style.css">
+</head>
+<body>
+<div id="sc-auth">
+  <div class="au-wrap">
+    <button class="au-back" onclick="goLanding()">← Back</button>
+    <div class="au-card">
+      <div class="au-logo">
+        <div class="au-logo-mark">TD</div>
+        <div class="au-logo-text">Trade<span>Desk</span></div>
+      </div>
+      <div class="au-tabs">
+        <button class="au-tab on" onclick="authTab('in',this)">Sign In</button>
+        <button class="au-tab" onclick="authTab('up',this)">Sign Up</button>
+      </div>
+      <div id="form-in" class="au-form">
+        <button class="btn btn-google btn-full" onclick="doGoogle()"><svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg> Continue with Google</button>
+        <div class="au-or">or</div>
+        <div class="field"><label class="fl">Email Address</label><input id="si-em" type="email" placeholder="you@email.com"></div>
+        <div class="field"><label class="fl">Password</label><input id="si-pw" type="password" placeholder="••••••••"></div>
+        <button class="btn btn-amber btn-full" id="si-btn" onclick="doSignIn()">Sign In →</button>
+      </div>
+      <div id="form-up" class="au-form" style="display:none">
+        <button class="btn btn-google btn-full" onclick="doGoogle()"><svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg> Continue with Google</button>
+        <div class="au-or">or</div>
+        <div class="field"><label class="fl">Full Name</label><input id="su-nm" type="text" placeholder="Your name"></div>
+        <div class="field"><label class="fl">Email Address</label><input id="su-em" type="email" placeholder="you@email.com"></div>
+        <div class="field"><label class="fl">Password</label><input id="su-pw" type="password" placeholder="6+ characters"></div>
+        <button class="btn btn-amber btn-full" id="su-btn" onclick="doSignUp()">Create Account →</button>
+      </div>
+      <div class="au-err" id="auth-err"></div>
+      <div class="au-foot">By continuing you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP
+══════════════════════════════════════ -->
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const FC={apiKey:"AIzaSyCACYBsV7UocUCsL1DgtNd_iTdes2_VHZU",authDomain:"trade-desk---trading-tracker.firebaseapp.com",projectId:"trade-desk---trading-tracker",storageBucket:"trade-desk---trading-tracker.firebasestorage.app",messagingSenderId:"126552279055",appId:"1:126552279055:web:1d3b15c892a6d1d6957b7a"};
+const FA=initializeApp(FC);
+const auth=getAuth(FA),db=getFirestore(FA),gp=new GoogleAuthProvider();
+window._auth=auth;window._db=db;
+window._fb={createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,updateProfile,doc,setDoc,getDoc,signInWithPopup,gp};
+
+onAuthStateChanged(auth,u=>{
+  if(u) window.location.href='app/cal.html';
+  else  document.getElementById('sc-auth').style.display='flex';
+});
+
+function S(id,v){const e=document.getElementById(id);if(e)e.style.display=v;}
+function showErr(id,msg){const e=document.getElementById(id);if(e){e.textContent=msg;e.style.display=msg?'block':'none';}}
+function fErr(id){showErr(id,'');}
+
+async function doGoogle(){
+  if(!window._fb){demoMode();return;}
+  try{await window._fb.signInWithPopup(window._auth,window._fb.gp);}
+  catch(e){showErr(e.message||'Google sign-in failed.');}
+}
+async function doSignIn(){
+  if(!window._fb){demoMode();return;}
+  const em=document.getElementById('si-em').value,pw=document.getElementById('si-pw').value;
+  if(!em||!pw){showErr('Please fill in all fields.');return;}
+  try{document.getElementById('si-btn').disabled=true;await window._fb.signInWithEmailAndPassword(window._auth,em,pw);}
+  catch(e){showErr(fErr(e.code));document.getElementById('si-btn').disabled=false;}
+}
+async function doSignUp(){
+  if(!window._fb){demoMode();return;}
+  const n=document.getElementById('su-nm').value.trim(),em=document.getElementById('su-em').value,pw=document.getElementById('su-pw').value;
+  if(!n||!em||!pw){showErr('Please fill in all fields.');return;}
+  try{
+    document.getElementById('su-btn').disabled=true;
+    const c=await window._fb.createUserWithEmailAndPassword(window._auth,em,pw);
+    await window._fb.updateProfile(c.user,{displayName:n});
+  }catch(e){showErr(fErr(e.code));document.getElementById('su-btn').disabled=false;}
+}
+async function doSignOut(){
+  if(window._auth&&window._fb)await window._fb.signOut(window._auth);
+  else goLanding();
+}
+function showAuth(tab){
+  document.getElementById('sc-land').style.display='none';
+  document.getElementById('sc-auth').style.display='flex';
+  document.getElementById('sc-app').style.display='none';
+  document.querySelectorAll('.au-tab').forEach((el,i)=>{el.classList.toggle('on',(tab==='in'&&i===0)||(tab==='up'&&i===1));});
+  document.getElementById('form-in').style.display=tab==='in'?'flex':'none';
+  document.getElementById('form-up').style.display=tab==='up'?'flex':'none';
+  document.getElementById('auth-err').style.display='none';
+}
+function startDemo(){demoMode();}
+function demoMode(){
+  window._user=null;
+  document.getElementById('sc-land').style.display='none';
+  document.getElementById('sc-auth').style.display='none';
+  document.getElementById('sc-app').style.display='flex';
+  document.getElementById('uname').textContent='Demo';
+  setSyncDot('err');
+  boot();
+}
+function showErr(m){const e=document.getElementById('auth-err');e.textContent=m;e.style.display='block';}
+function fErr(c){return{'auth/user-not-found':'No account found.','auth/wrong-password':'Wrong password.','auth/invalid-credential':'Invalid email or password.','auth/email-already-in-use':'Email already in use.','auth/weak-password':'Password must be 6+ chars.','auth/invalid-email':'Invalid email.'}[c]||'Something went wrong.';}
+
+/* ═══════════════════════════════════
+   BOOT
+═══════════════════════════════════ */
+window.boot=function(){
+  if(window._user){
+    const nm=window._user.displayName||window._user.email||'';
+    document.getElementById('uname').textContent=nm.split(' ')[0]||nm;
+    const init=nm.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)||'TD';
+    document.getElementById('uinit').textContent=init;
+    if(window._user.photoURL){
+      const av=document.getElementById('uavatar');av.src=window._user.photoURL;av.style.display='block';
+      document.getElementById('uinit').style.display='none';
+    }
+  }
+  const theme=localStorage.getItem('td-theme')||'dark';
+  const tb=document.getElementById('theme-btn');if(tb)tb.textContent=theme==='light'?'☾':'☀';
+  initSumSelects();renderCal();renderFin();
+};
+
+/* ═══════════════════════════════════
+   TABS
+═══════════════════════════════════ */
+
+// Theme
+(()=>{const t=localStorage.getItem('tdp_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</body>
+</html>
